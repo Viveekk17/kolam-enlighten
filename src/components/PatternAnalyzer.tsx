@@ -141,7 +141,7 @@ export function PatternAnalyzer() {
                 <img
                   src={preview}
                   alt="Kolam preview"
-                  className="max-w-md max-h-64 mx-auto rounded-xl shadow-lg object-contain"
+                  className="max-w-full sm:max-w-md max-h-48 sm:max-h-64 mx-auto rounded-xl shadow-lg object-contain"
                 />
                 <p className="text-sm text-muted-foreground">
                   {selectedFile?.name}
@@ -193,7 +193,7 @@ export function PatternAnalyzer() {
             Pattern Analysis Results
           </h2>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Dot Count */}
             <Card className="analysis-card">
               <CardHeader className="pb-3">
@@ -257,7 +257,7 @@ export function PatternAnalyzer() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                 {analysisResult.principles.map((principle, index) => (
                   <div
                     key={index}

@@ -25,7 +25,7 @@ interface Game {
 const games: Game[] = [
   {
     title: "Dot Connector",
-    description: "Connect dots to form traditional kolam patterns. Master the art of continuous lines.",
+    description: "Connect dots to form traditional kolam patterns. Master the art of continuous lines and create beautiful geometric designs.",
     difficulty: "Easy",
     points: 100,
     icon: Target,
@@ -34,7 +34,7 @@ const games: Game[] = [
   },
   {
     title: "Pattern Memory",
-    description: "Study complex kolam designs and recreate them from memory. Test your visual recall.",
+    description: "Study complex kolam designs and recreate them from memory. Test your visual recall and understanding of traditional patterns.",
     difficulty: "Medium", 
     points: 250,
     icon: Brain,
@@ -43,39 +43,12 @@ const games: Game[] = [
   },
   {
     title: "Symmetry Master",
-    description: "Create perfectly symmetrical patterns under time pressure. Precision is key.",
+    description: "Create perfectly symmetrical patterns under time pressure. Master the mathematical precision of traditional kolam art.",
     difficulty: "Hard",
     points: 500,
     icon: Zap,
-    status: "locked",
-    players: 456
-  },
-  {
-    title: "Speed Kolam",
-    description: "Race against time to complete traditional patterns. Fast fingers, focused mind.",
-    difficulty: "Medium",
-    points: 300,
-    icon: Trophy,
-    status: "completed",
-    players: 678
-  },
-  {
-    title: "Cultural Quiz",
-    description: "Test your knowledge of kolam history, regional variations, and cultural significance.",
-    difficulty: "Easy",
-    points: 150,
-    icon: Star,
     status: "available",
-    players: 1534
-  },
-  {
-    title: "Master Challenge",
-    description: "Ultimate test combining all skills. Only for true kolam masters.",
-    difficulty: "Hard",
-    points: 1000,
-    icon: Brain,
-    status: "locked",
-    players: 234
+    players: 456
   }
 ];
 
@@ -106,13 +79,13 @@ export default function Games() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="text-center space-y-4">
-        <h1 className="text-4xl md:text-5xl font-traditional font-bold text-primary">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-traditional font-bold text-primary">
           Kolam Games
         </h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+        <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
           Learn traditional kolam principles through engaging games. Build your skills, 
           earn points, and compete with fellow pattern enthusiasts.
         </p>
@@ -152,7 +125,7 @@ export default function Games() {
           Available Games
         </h2>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {games.map((game, index) => (
             <Card key={index} className="card-traditional group hover:scale-[1.02] transition-all duration-300">
               <CardHeader>

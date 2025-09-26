@@ -52,7 +52,7 @@ export function Layout({ children }: LayoutProps) {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-1">
+            <nav className="hidden lg:flex items-center space-x-1">
               {navigation.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
@@ -71,10 +71,10 @@ export function Layout({ children }: LayoutProps) {
               })}
             </nav>
 
-            {/* Mobile menu button */}
+            {/* Mobile & Tablet menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-primary/5 transition-colors"
+              className="lg:hidden p-2 rounded-lg hover:bg-primary/5 transition-colors"
             >
               {mobileMenuOpen ? (
                 <X className="w-6 h-6" />
@@ -84,9 +84,9 @@ export function Layout({ children }: LayoutProps) {
             </button>
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Mobile & Tablet Navigation */}
           {mobileMenuOpen && (
-            <nav className="md:hidden py-4 border-t border-primary/10 animate-traditional-fade">
+            <nav className="lg:hidden py-4 border-t border-primary/10 animate-traditional-fade">
               <div className="space-y-2">
                 {navigation.map((item) => {
                   const isActive = location.pathname === item.href;
