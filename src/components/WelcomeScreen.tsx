@@ -12,7 +12,7 @@ export function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
     const timer = setTimeout(() => {
       setIsVisible(false);
       setTimeout(onComplete, 300); // Allow fade out animation to complete
-    }, 1000);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [onComplete]);

@@ -3,73 +3,146 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Palette, 
-  Grid, 
+  Grid3X3, 
   Sparkles, 
   Save, 
   Download, 
-  Undo, 
-  Redo,
-  RotateCw,
   Zap,
   Eye,
-  Layers,
   Settings,
-  Paintbrush2,
-  MousePointer
+  Shapes,
+  Repeat,
+  RotateCw,
+  Maximize2,
+  Play
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-interface Tool {
-  name: string;
-  icon: any;
-  description: string;
-  active?: boolean;
-}
+const patternTypes = [
+  { value: "radial", label: "Radial Pattern", description: "Central point with radiating elements" },
+  { value: "linear", label: "Linear Pattern", description: "Sequential connected lines" },
+  { value: "mandala", label: "Mandala Pattern", description: "Circular concentric design" },
+  { value: "geometric", label: "Geometric Pattern", description: "Angular mathematical forms" },
+  { value: "floral", label: "Floral Pattern", description: "Nature-inspired organic shapes" }
+];
 
-const tools: Tool[] = [
-  { name: "Select", icon: MousePointer, description: "Select and move elements" },
-  { name: "Dot", icon: Grid, description: "Place connection dots" },
-  { name: "Line", icon: Paintbrush2, description: "Draw connecting lines" },
-  { name: "Pattern", icon: Sparkles, description: "Add traditional patterns" }
+const shapeTypes = [
+  { value: "circle", label: "Circles", icon: "○" },
+  { value: "square", label: "Squares", icon: "□" },
+  { value: "triangle", label: "Triangles", icon: "△" },
+  { value: "diamond", label: "Diamonds", icon: "◇" },
+  { value: "star", label: "Stars", icon: "✦" },
+  { value: "lotus", label: "Lotus", icon: "❀" }
 ];
 
 const templates = [
   {
-    name: "Simple 5-Dot",
-    difficulty: "Beginner",
-    dots: 5,
-    preview: "◦ ◦ ◦\n ◦ ◦",
-    description: "Perfect starting pattern for newcomers"
+    name: "Simple Grid",
+    gridSize: 5,
+    pattern: "radial",
+    shapes: ["circle", "square"],
+    complexity: "Beginner",
+    preview: "5×5 Basic Grid"
   },
   {
-    name: "Lotus Mandala", 
-    difficulty: "Intermediate",
-    dots: 13,
-    preview: "◦ ◦ ◦ ◦ ◦\n◦ ◦ ◦ ◦ ◦\n ◦ ◦ ◦",
-    description: "Classic lotus-inspired design"  
+    name: "Festival Mandala", 
+    gridSize: 9,
+    pattern: "mandala",
+    shapes: ["circle", "lotus", "star"],
+    complexity: "Intermediate",
+    preview: "9×9 Mandala"
   },
   {
     name: "Temple Gateway",
-    difficulty: "Advanced", 
-    dots: 25,
-    preview: "◦ ◦ ◦ ◦ ◦\n◦ ◦ ◦ ◦ ◦\n◦ ◦ ◦ ◦ ◦\n◦ ◦ ◦ ◦ ◦\n ◦ ◦ ◦ ◦ ◦",
-    description: "Complex temple-inspired geometry"
+    gridSize: 13,
+    pattern: "geometric", 
+    shapes: ["square", "diamond", "triangle"],
+    complexity: "Advanced",
+    preview: "13×13 Complex"
   }
 ];
 
-const colorPalettes = [
-  { name: "Traditional", colors: ["#8B0000", "#FFD700", "#FFFFFF", "#000000"] },
-  { name: "Festival", colors: ["#FF6B35", "#F7931E", "#FFD23F", "#06FFA5"] },
-  { name: "Temple", colors: ["#4A0E4E", "#81689D", "#FFD23F", "#FF6B35"] },
-  { name: "Modern", colors: ["#2C3E50", "#3498DB", "#E74C3C", "#F39C12"] }
-];
+interface GenerationParams {
+  gridSize: number[];
+  patternType: string;
+  selectedShapes: string[];
+  complexity: number[];
+  symmetry: string;
+  loops: number[];
+  spacing: number[];
+}
 
 export default function Create() {
-  const [selectedTool, setSelectedTool] = useState("Select");
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [brushSize, setBrushSize] = useState([3]);
-  const [selectedPalette, setSelectedPalette] = useState("Traditional");
+  const [params, setParams] = useState<GenerationParams>({
+    gridSize: [7],
+    patternType: "",
+    selectedShapes: [],
+    complexity: [5],
+    symmetry: "radial",
+    loops: [3],
+    spacing: [2]
+  });
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedPattern, setGeneratedPattern] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleShapeToggle = (shape: string) => {
+    setParams(prev => ({
+      ...prev,
+      selectedShapes: prev.selectedShapes.includes(shape)
+        ? prev.selectedShapes.filter(s => s !== shape)
+        : [...prev.selectedShapes, shape]
+    }));
+  };
+
+  const handleTemplateSelect = (template: any) => {
+    setParams({
+      gridSize: [template.gridSize],
+      patternType: template.pattern,
+      selectedShapes: template.shapes,
+      complexity: [template.gridSize > 9 ? 8 : template.gridSize > 5 ? 6 : 4],
+      symmetry: template.pattern === "mandala" ? "radial" : "bilateral",
+      loops: [Math.floor(template.gridSize / 3)],
+      spacing: [2]
+    });
+  };
+
+  const generateKolam = async () => {
+    if (!params.patternType || params.selectedShapes.length === 0) {
+      toast({
+        title: "Missing Parameters",
+        description: "Please select pattern type and at least one shape",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    try {
+      // Simulate generation process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setGeneratedPattern(`Generated ${params.patternType} pattern with ${params.selectedShapes.join(', ')} on ${params.gridSize[0]}×${params.gridSize[0]} grid`);
+      
+      toast({
+        title: "Kolam Generated!",
+        description: "Your custom kolam pattern has been created successfully"
+      });
+    } catch (error) {
+      toast({
+        title: "Generation Failed",
+        description: "There was an error generating your kolam pattern",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -85,152 +158,190 @@ export default function Create() {
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl md:text-5xl font-traditional font-bold text-primary">
-          Creation Studio
+          Kolam Recreation Studio
         </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Design beautiful kolam patterns with our digital tools. Start from templates 
-          or create from scratch using traditional principles and modern technology.
+          Create beautiful kolam patterns by specifying parameters. Our AI will generate 
+          traditional designs based on your input preferences and mathematical principles.
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-4 gap-8">
-        {/* Sidebar - Tools & Options */}
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Parameters Panel */}
         <div className="space-y-6">
-          {/* Tools */}
+          {/* Grid Configuration */}
           <Card className="card-traditional">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Palette className="w-5 h-5 text-primary" />
-                <span>Tools</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {tools.map((tool) => (
-                <Button
-                  key={tool.name}
-                  variant={selectedTool === tool.name ? "default" : "outline"}
-                  size="sm"
-                  className={`w-full justify-start ${
-                    selectedTool === tool.name 
-                      ? "bg-gradient-to-r from-primary to-accent text-primary-foreground" 
-                      : ""
-                  }`}
-                  onClick={() => setSelectedTool(tool.name)}
-                >
-                  <tool.icon className="w-4 h-4 mr-2" />
-                  {tool.name}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Brush Settings */}
-          <Card className="card-traditional">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Settings className="w-5 h-5 text-primary" />
-                <span>Settings</span>
+                <Grid3X3 className="w-5 h-5 text-primary" />
+                <span>Grid Configuration</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Brush Size</label>
-                <Slider
-                  value={brushSize}
-                  onValueChange={setBrushSize}
-                  max={10}
-                  min={1}
-                  step={1}
-                  className="w-full"
-                />
-                <div className="text-xs text-muted-foreground mt-1">
-                  Size: {brushSize[0]}px
+                <Label className="text-sm font-medium">Grid Size</Label>
+                <div className="mt-2">
+                  <Slider
+                    value={params.gridSize}
+                    onValueChange={(value) => setParams(prev => ({...prev, gridSize: value}))}
+                    max={15}
+                    min={3}
+                    step={2}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>3×3</span>
+                    <span className="font-medium text-primary">{params.gridSize[0]}×{params.gridSize[0]}</span>
+                    <span>15×15</span>
+                  </div>
                 </div>
               </div>
               
               <div>
-                <label className="text-sm font-medium mb-2 block">Grid Snap</label>
-                <Button size="sm" variant="outline" className="w-full">
-                  <Grid className="w-4 h-4 mr-2" />
-                  Enabled
-                </Button>
+                <Label className="text-sm font-medium">Dot Spacing</Label>
+                <div className="mt-2">
+                  <Slider
+                    value={params.spacing}
+                    onValueChange={(value) => setParams(prev => ({...prev, spacing: value}))}
+                    max={5}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Spacing: {params.spacing[0]}x units
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Color Palettes */}
+          {/* Pattern Type */}
           <Card className="card-traditional">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Paintbrush2 className="w-5 h-5 text-primary" />
-                <span>Colors</span>
+                <Shapes className="w-5 h-5 text-primary" />
+                <span>Pattern Type</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {colorPalettes.map((palette) => (
-                <div key={palette.name} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{palette.name}</span>
-                    <Button 
-                      size="sm" 
-                      variant={selectedPalette === palette.name ? "default" : "outline"}
-                      onClick={() => setSelectedPalette(palette.name)}
-                      className="h-6 px-2 text-xs"
-                    >
-                      {selectedPalette === palette.name ? "Active" : "Use"}
-                    </Button>
-                  </div>
-                  <div className="flex space-x-1">
-                    {palette.colors.map((color, index) => (
-                      <div
-                        key={index}
-                        className="w-6 h-6 rounded border border-gray-300 cursor-pointer hover:scale-110 transition-transform"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))}
+            <CardContent>
+              <Select value={params.patternType} onValueChange={(value) => setParams(prev => ({...prev, patternType: value}))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select pattern style" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patternTypes.map((pattern) => (
+                    <SelectItem key={pattern.value} value={pattern.value}>
+                      <div>
+                        <div className="font-medium">{pattern.label}</div>
+                        <div className="text-xs text-muted-foreground">{pattern.description}</div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
+          {/* Shape Selection */}
           <Card className="card-traditional">
             <CardHeader>
-              <CardTitle>Actions</CardTitle>
+              <CardTitle className="flex items-center space-x-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <span>Shape Elements</span>
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Button size="sm" variant="outline" className="w-full justify-start">
-                <Undo className="w-4 h-4 mr-2" />
-                Undo
-              </Button>
-              <Button size="sm" variant="outline" className="w-full justify-start">
-                <Redo className="w-4 h-4 mr-2" />
-                Redo
-              </Button>
-              <Button size="sm" variant="outline" className="w-full justify-start">
-                <RotateCw className="w-4 h-4 mr-2" />
-                Rotate
-              </Button>
-              <div className="divider-traditional my-3" />
-              <Button size="sm" className="w-full justify-start bg-gradient-to-r from-primary to-accent text-primary-foreground">
-                <Save className="w-4 h-4 mr-2" />
-                Save Design
-              </Button>
-              <Button size="sm" variant="outline" className="w-full justify-start">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2">
+                {shapeTypes.map((shape) => (
+                  <Button
+                    key={shape.value}
+                    variant={params.selectedShapes.includes(shape.value) ? "default" : "outline"}
+                    size="sm"
+                    className={`justify-start ${
+                      params.selectedShapes.includes(shape.value) 
+                        ? "bg-gradient-to-r from-primary to-accent text-primary-foreground" 
+                        : ""
+                    }`}
+                    onClick={() => handleShapeToggle(shape.value)}
+                  >
+                    <span className="mr-2 text-lg">{shape.icon}</span>
+                    <span className="text-xs">{shape.label}</span>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Advanced Parameters */}
+          <Card className="card-traditional">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Settings className="w-5 h-5 text-primary" />
+                <span>Advanced Settings</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium">Complexity Level</Label>
+                <div className="mt-2">
+                  <Slider
+                    value={params.complexity}
+                    onValueChange={(value) => setParams(prev => ({...prev, complexity: value}))}
+                    max={10}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Level: {params.complexity[0]}/10
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium">Loop Count</Label>
+                <div className="mt-2">
+                  <Slider
+                    value={params.loops}
+                    onValueChange={(value) => setParams(prev => ({...prev, loops: value}))}
+                    max={8}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Loops: {params.loops[0]} concentric layers
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium">Symmetry Type</Label>
+                <div className="mt-2">
+                  <Select value={params.symmetry} onValueChange={(value) => setParams(prev => ({...prev, symmetry: value}))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="radial">Radial Symmetry</SelectItem>
+                      <SelectItem value="bilateral">Bilateral Symmetry</SelectItem>
+                      <SelectItem value="rotational">Rotational Symmetry</SelectItem>
+                      <SelectItem value="asymmetric">Asymmetric Flow</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Canvas Area */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Canvas Controls */}
+        {/* Generation Area */}
+        <div className="space-y-6">
+          {/* Controls */}
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-traditional font-bold text-primary">
-              Canvas
+              Generation Canvas
             </h2>
             <div className="flex items-center space-x-2">
               <Button size="sm" variant="outline">
@@ -238,12 +349,8 @@ export default function Create() {
                 Preview
               </Button>
               <Button size="sm" variant="outline">
-                <Layers className="w-4 h-4 mr-2" />
-                Layers
-              </Button>
-              <Button size="sm" variant="outline">
-                <Zap className="w-4 h-4 mr-2" />
-                Auto-Complete
+                <RotateCw className="w-4 h-4 mr-2" />
+                Variants
               </Button>
             </div>
           </div>
@@ -252,62 +359,106 @@ export default function Create() {
           <Card className="card-traditional">
             <CardContent className="p-8">
               <div className="aspect-square bg-gradient-to-br from-background to-kolam-cream/30 rounded-xl border-2 border-dashed border-primary/20 flex items-center justify-center dot-pattern">
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto">
-                    <Palette className="w-8 h-8 text-primary-foreground" />
+                {generatedPattern ? (
+                  <div className="text-center space-y-4 max-w-sm">
+                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto animate-kolam-glow">
+                      <Sparkles className="w-10 h-10 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-traditional font-semibold text-primary mb-2">
+                        Pattern Generated!
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {generatedPattern}
+                      </p>
+                    </div>
+                    <div className="flex space-x-2 justify-center">
+                      <Button size="sm" variant="outline">
+                        <Maximize2 className="w-4 h-4 mr-2" />
+                        View Full
+                      </Button>
+                      <Button size="sm" className="btn-hero">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-traditional font-semibold text-primary mb-2">
-                      Start Creating
-                    </h3>
-                    <p className="text-muted-foreground max-w-sm">
-                      Select a template to begin or start drawing with the tools on the left. 
-                      Your kolam pattern will appear here.
-                    </p>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto">
+                      <Zap className="w-8 h-8 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-traditional font-semibold text-primary mb-2">
+                        Ready to Generate
+                      </h3>
+                      <p className="text-muted-foreground max-w-sm">
+                        Configure your parameters and click generate to create a custom kolam pattern
+                      </p>
+                    </div>
+                    <Button 
+                      className="btn-hero" 
+                      onClick={generateKolam}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Repeat className="w-4 h-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-2" />
+                          Generate Kolam
+                        </>
+                      )}
+                    </Button>
                   </div>
-                  <Button className="btn-hero">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Begin Drawing
-                  </Button>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Canvas Info */}
+          {/* Pattern Stats */}
           <div className="grid grid-cols-3 gap-4">
             <Card className="analysis-card text-center">
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-primary mb-1">0</div>
-                <div className="text-sm text-muted-foreground">Dots Placed</div>
+                <div className="text-2xl font-bold text-primary mb-1">
+                  {params.gridSize[0] * params.gridSize[0]}
+                </div>
+                <div className="text-sm text-muted-foreground">Total Dots</div>
               </CardContent>
             </Card>
             <Card className="analysis-card text-center">
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-primary mb-1">0</div>
-                <div className="text-sm text-muted-foreground">Lines Drawn</div>
+                <div className="text-2xl font-bold text-primary mb-1">
+                  {params.loops[0]}
+                </div>
+                <div className="text-sm text-muted-foreground">Loops</div>
               </CardContent>
             </Card>
             <Card className="analysis-card text-center">
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-primary mb-1">—</div>
-                <div className="text-sm text-muted-foreground">Symmetry</div>
+                <div className="text-2xl font-bold text-primary mb-1">
+                  {params.selectedShapes.length}
+                </div>
+                <div className="text-sm text-muted-foreground">Shapes</div>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Templates & Inspiration */}
+        {/* Templates & Quick Actions */}
         <div className="space-y-6">
-          {/* Templates */}
+          {/* Quick Templates */}
           <Card className="card-traditional">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Grid className="w-5 h-5 text-primary" />
-                <span>Templates</span>
+                <Zap className="w-5 h-5 text-primary" />
+                <span>Quick Templates</span>
               </CardTitle>
               <CardDescription>
-                Start with traditional patterns
+                Pre-configured parameter sets
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -315,65 +466,75 @@ export default function Create() {
                 <div 
                   key={index}
                   className="p-3 border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors cursor-pointer"
-                  onClick={() => setSelectedTemplate(template.name)}
+                  onClick={() => handleTemplateSelect(template)}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="font-medium text-primary text-sm">{template.name}</h4>
-                    <Badge className={getDifficultyColor(template.difficulty)}>
-                      {template.difficulty}
+                    <Badge className={getDifficultyColor(template.complexity)}>
+                      {template.complexity}
                     </Badge>
                   </div>
                   
-                  <div className="bg-background/50 rounded p-2 mb-2 font-mono text-xs text-center">
-                    {template.preview.split('\n').map((line, i) => (
-                      <div key={i}>{line}</div>
-                    ))}
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <div>Grid: {template.gridSize}×{template.gridSize}</div>
+                    <div>Pattern: {template.pattern}</div>
+                    <div>Shapes: {template.shapes.join(', ')}</div>
                   </div>
                   
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {template.description}
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{template.dots} dots</span>
-                    <Button size="sm" variant="outline" className="h-6 px-2 text-xs">
-                      Use Template
-                    </Button>
-                  </div>
+                  <Button size="sm" variant="outline" className="w-full mt-2 h-6 text-xs">
+                    Load Template
+                  </Button>
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          {/* Inspiration */}
+          {/* Actions */}
           <Card className="card-traditional">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <span>Inspiration</span>
-              </CardTitle>
+              <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="text-sm space-y-2">
-                <p className="font-medium text-primary">Traditional Principles:</p>
-                <ul className="space-y-1 text-muted-foreground text-xs">
-                  <li>• Start from center point</li>
-                  <li>• Maintain symmetry</li>
-                  <li>• Connect without lifting</li>
-                  <li>• Use mathematical ratios</li>
-                </ul>
+            <CardContent className="space-y-2">
+              <Button size="sm" variant="outline" className="w-full justify-start">
+                <Save className="w-4 h-4 mr-2" />
+                Save Parameters
+              </Button>
+              <Button size="sm" variant="outline" className="w-full justify-start">
+                <Download className="w-4 h-4 mr-2" />
+                Export Pattern
+              </Button>
+              <Button size="sm" variant="outline" className="w-full justify-start">
+                <Repeat className="w-4 h-4 mr-2" />
+                Generate Variants
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Parameter Summary */}
+          <Card className="card-traditional">
+            <CardHeader>
+              <CardTitle className="text-lg">Current Configuration</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Grid:</span>
+                <span className="font-medium">{params.gridSize[0]}×{params.gridSize[0]}</span>
               </div>
-              
-              <div className="divider-traditional" />
-              
-              <div className="text-sm space-y-2">
-                <p className="font-medium text-primary">Popular Motifs:</p>
-                <div className="flex flex-wrap gap-1">
-                  {["Lotus", "Peacock", "Star", "Mandala", "Temple"].map((motif) => (
-                    <Badge key={motif} variant="outline" className="text-xs">
-                      {motif}
-                    </Badge>
-                  ))}
-                </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Pattern:</span>
+                <span className="font-medium">{params.patternType || "Not selected"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Shapes:</span>
+                <span className="font-medium">{params.selectedShapes.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Complexity:</span>
+                <span className="font-medium">{params.complexity[0]}/10</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Symmetry:</span>
+                <span className="font-medium">{params.symmetry}</span>
               </div>
             </CardContent>
           </Card>
