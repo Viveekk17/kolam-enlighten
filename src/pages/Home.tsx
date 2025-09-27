@@ -60,10 +60,10 @@ export default function Home() {
         <div className="text-center space-y-6 sm:space-y-8 max-w-4xl mx-auto">
           <div className="animate-traditional-fade">
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-traditional font-bold bg-gradient-to-r from-primary via-primary-light to-accent bg-clip-text text-transparent mb-4 sm:mb-6">
-              Where Heritage Meets
+              Culture Meets AI
               <br />
               <span className="relative">
-                Intelligence
+                
                 <div className="absolute -top-4 -right-8 animate-kolam-glow">
                   <Sparkles className="w-8 h-8 text-accent opacity-80" />
                 </div>
